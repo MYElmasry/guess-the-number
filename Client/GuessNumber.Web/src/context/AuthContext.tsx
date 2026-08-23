@@ -80,5 +80,14 @@ export function useAuth() {
 }
 
 export function getAuthErrorMessage(error: unknown): string {
-  return getErrorMessage(error);
+  const message = getErrorMessage(error);
+
+  if (
+    message === 'Your session expired. Please sign in again.' ||
+    message.startsWith('Request failed with status code')
+  ) {
+    return 'Invalid email or password.';
+  }
+
+  return message;
 }
