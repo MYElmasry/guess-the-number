@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Server/">
+    <Project Path="Server/GuessNumber.API/GuessNumber.API.csproj" />
+    <Project Path="Server/GuessNumber.Application/GuessNumber.Application.csproj" />
+    <Project Path="Server/GuessNumber.Domain/GuessNumber.Domain.csproj" />
+    <Project Path="Server/GuessNumber.Infrastructure/GuessNumber.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GuessNumber.Application.Tests/GuessNumber.Application.Tests.csproj" />
+  </Folder>
+</Solution>
