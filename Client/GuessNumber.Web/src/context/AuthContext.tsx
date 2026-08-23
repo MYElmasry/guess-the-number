@@ -17,7 +17,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshUser: (clearOnFailure?: boolean) => Promise<void>;
+  updateBestScore: (bestScore: number) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -26,18 +27,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshUser = useCallback(async () => {
+  const refreshUser = useCallback(async (clearOnFailure = false) => {
     try {
       const currentUser = await authApi.getCurrentUser();
       setUser(currentUser);
     } catch {
-      setUser(null);
+      if (clearOnFailure) {
+        setUser(null);
+      }
     }
+  }, []);
+
+  const updateBestScore = useCallback((bestScore: number) => {
+    setUser((prev) => (prev ? { ...prev, bestScore } : prev));
   }, []);
 
   useEffect(() => {
     void (async () => {
-      await refreshUser();
+      await refreshUser(true);
       setLoading(false);
     })();
   }, [refreshUser]);
@@ -57,8 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, refreshUser }),
-    [user, loading, login, register, logout, refreshUser],
+    () => ({ user, loading, login, register, logout, refreshUser, updateBestScore }),
+    [user, loading, login, register, logout, refreshUser, updateBestScore],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

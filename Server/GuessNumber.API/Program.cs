@@ -1,5 +1,7 @@
 using System.Text;
 using GuessNumber.API.Middleware;
+using GuessNumber.API.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 using GuessNumber.Application.Interfaces;
 using GuessNumber.Application.Services;
 using GuessNumber.Infrastructure;
@@ -19,8 +21,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasherService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddSingleton<AuthCookieOptions>();
 
-var frontendUrl = builder.Configuration["FrontendUrl"] ?? "http://localhost:5173";
+var frontendUrl = (builder.Configuration["FrontendUrl"] ?? "http://localhost:5173").TrimEnd('/');
 
 builder.Services.AddCors(options =>
 {
@@ -72,7 +75,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 using (var scope = app.Services.CreateScope())
 {

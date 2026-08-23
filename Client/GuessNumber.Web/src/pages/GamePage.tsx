@@ -4,7 +4,7 @@ import { getErrorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 export function GamePage() {
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, updateBestScore } = useAuth();
   const guessInputRef = useRef<HTMLInputElement>(null);
   const [gameId, setGameId] = useState<string | null>(null);
   const [min, setMin] = useState(1);
@@ -87,7 +87,9 @@ export function GamePage() {
         const previousBest = user?.bestScore ?? null;
         const newBest = response.bestScore ?? response.attempts;
         setIsNewBest(previousBest === null || newBest < previousBest);
-        await refreshUser();
+        if (response.bestScore != null) {
+          updateBestScore(response.bestScore);
+        }
       } else {
         setFeedback(response.result === 'higher' ? 'Try higher ↑' : 'Try lower ↓');
       }

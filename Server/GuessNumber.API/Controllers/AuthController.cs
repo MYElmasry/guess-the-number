@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using GuessNumber.Application.DTOs;
 using GuessNumber.Application.Interfaces;
+using GuessNumber.API.Services;
 using GuessNumber.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,22 +12,18 @@ namespace GuessNumber.API.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private const string AuthCookieName = "auth_token";
     private readonly IAuthService _authService;
     private readonly ITokenService _tokenService;
-    private readonly IConfiguration _configuration;
-    private readonly IWebHostEnvironment _environment;
+    private readonly AuthCookieOptions _cookieOptions;
 
     public AuthController(
         IAuthService authService,
         ITokenService tokenService,
-        IConfiguration configuration,
-        IWebHostEnvironment environment)
+        AuthCookieOptions cookieOptions)
     {
         _authService = authService;
         _tokenService = tokenService;
-        _configuration = configuration;
-        _environment = environment;
+        _cookieOptions = cookieOptions;
     }
 
     [HttpPost("register")]
@@ -56,13 +53,7 @@ public class AuthController : ControllerBase
     [Authorize]
     public IActionResult Logout()
     {
-        Response.Cookies.Delete(AuthCookieName, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = !_environment.IsDevelopment(),
-            SameSite = _environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None,
-            Path = "/"
-        });
+        Response.Cookies.Delete(AuthCookieOptions.CookieName, _cookieOptions.Create());
 
         return NoContent();
     }
@@ -87,13 +78,8 @@ public class AuthController : ControllerBase
 
     private void AppendAuthCookie(string token)
     {
-        Response.Cookies.Append(AuthCookieName, token, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = !_environment.IsDevelopment(),
-            SameSite = _environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None,
-            Expires = DateTimeOffset.UtcNow.AddDays(7),
-            Path = "/"
-        });
+        var options = _cookieOptions.Create();
+        options.Expires = DateTimeOffset.UtcNow.AddDays(7);
+        Response.Cookies.Append(AuthCookieOptions.CookieName, token, options);
     }
 }
